@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.87
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheDroveDownloader", "TheDroveDownloader.csproj", "{6F3B4032-D0EE-419E-AC51-D67C28DCFD6C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6F3B4032-D0EE-419E-AC51-D67C28DCFD6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F3B4032-D0EE-419E-AC51-D67C28DCFD6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F3B4032-D0EE-419E-AC51-D67C28DCFD6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F3B4032-D0EE-419E-AC51-D67C28DCFD6C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {16088DB5-97B0-44E3-8876-FF0AD1121DC4}
+	EndGlobalSection
+EndGlobal
