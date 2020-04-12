@@ -1,2 +1,4 @@
 # the-trove-downloader
-Downloads files from The Trove Rpg Books
+Automatic downloads files from The Trove Rpg Books ([https://thetrove.net/](https://thetrove.net/))
+
+Execute **TheDroveDownloader.exe** and follow the instructions.
