@@ -3,14 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace TheDroveDownloader
+namespace TheTroveDownloader
 {
     static class Program
     {
@@ -30,7 +29,7 @@ namespace TheDroveDownloader
                         
             try
             { 
-                LoadPage(theTroveUrl, BasePath);
+                Task.WaitAll(LoadPage(theTroveUrl, BasePath));
                 Console.WriteLine("Finished.");
             }
             catch(Exception ex)
@@ -87,7 +86,7 @@ namespace TheDroveDownloader
                 parallel = maxParallel;
         }
 
-        public static void LoadPage(string baseUrl, string basePath)
+        public static async Task LoadPage(string baseUrl, string basePath)
         {
             Console.WriteLine($"Loading Page {baseUrl}");
 
@@ -101,11 +100,11 @@ namespace TheDroveDownloader
             var items = pageDocument.DocumentNode.SelectNodes("(//td[contains(@class,'litem_name')])");
 
             if (items != null && items.Any())
-                HandlePageItems(baseUrl, basePath, items);
+                await HandlePageItems(baseUrl, basePath, items);
 
         }
 
-        private static void HandlePageItems(string baseUrl, string basePath, HtmlNodeCollection items)
+        private static async Task HandlePageItems(string baseUrl, string basePath, HtmlNodeCollection items)
         {
             Dictionary<string, string> files = new Dictionary<string, string>();
             foreach (var item in items)
@@ -124,12 +123,12 @@ namespace TheDroveDownloader
                 }
                 else
                 {
-                    LoadPage($"{baseUrl}/{listedItem.Link}", Path.Combine(basePath, listedItem.Name));
+                    Task.WaitAll(LoadPage($"{baseUrl}/{listedItem.Link}", Path.Combine(basePath, listedItem.Name)));
                 }
             }
 
             Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = parallel }, file => {
-                DownloadFile(file.Key, file.Value);
+                Task.WaitAll(DownloadFile(file.Key, file.Value));
             });
         }
 
@@ -157,7 +156,7 @@ namespace TheDroveDownloader
                 !string.IsNullOrWhiteSpace(item.Link);
         }
 
-        public static void DownloadFile(string url, string path)
+        public static async Task DownloadFile(string url, string path)
         {
             bool downloading = true;
             int exceptionCount = 0;
@@ -166,7 +165,7 @@ namespace TheDroveDownloader
             {
                 try
                 {
-                    Console.WriteLine($"Downloading Fila {path}");
+                    Console.WriteLine($"Downloading File {path}");
                     CheckIfDirectoryExists(Path.GetDirectoryName(path));
 
                     if (FileExists(path))
@@ -175,8 +174,13 @@ namespace TheDroveDownloader
                     }
                     else
                     {
-                        using var wc = new System.Net.WebClient();
-                        wc.DownloadFile(url, path);
+                        using var wc = new HttpClient();
+                        var response = await wc.GetAsync(url);
+
+                        using (var fs = new FileStream(path, FileMode.CreateNew))
+                        {
+                            Task.WaitAll(response.Content.CopyToAsync(fs));
+                        }
                     }
                         
                     downloading = false;
