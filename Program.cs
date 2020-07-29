@@ -42,7 +42,7 @@ namespace TheTroveDownloader {
                 throw new ArgumentNullException(_basePath, "Invalid path");
             }
             
-            Console.Write("Enter the URL to download from (Optional):");
+            Console.Write("(Optional) Enter the URL to download from:");
             string newUrl = Console.ReadLine();
             if (!IsNullOrWhiteSpace(newUrl)) _theTroveUrl = newUrl;
 
