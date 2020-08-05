@@ -8,45 +8,43 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using static System.String;
 
-namespace TheTroveDownloader
-{
-    static class Program
-    {
+namespace TheTroveDownloader {
+    static class Program {
         private static readonly List<string> IgnoredNames = new List<string>();
         private static readonly List<string> OnlyIncludedNames = new List<string>();
         private static readonly List<string> IgnoredTypes = new List<string>();
-        private static string BasePath = string.Empty;
-        private static int parallel = 5;
-        private static readonly string theTroveUrl = "https://thetrove.net/Books";
+        private static string _basePath = Empty;
+        private static int _parallel = 5;
+        private static string _theTroveUrl = "https://thetrove.net/Books";
 
-        static void Main()
-        {
+        private static void Main() {
             IgnoredNames.Add("Parent Directory");
-            IgnoredNames.Add("?one");            
+            IgnoredNames.Add("?one");
             IgnoredTypes.Add(".DS_Store");
             ReadOptions();
-                        
-            try
-            { 
-                Task.WaitAll(LoadPage(theTroveUrl, BasePath));
+
+            try {
+                Task.WaitAll(LoadPage(_theTroveUrl, _basePath));
                 Console.WriteLine("Finished.");
             }
-            catch(Exception ex)
-            {
+            catch (Exception ex) {
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }
 
-        public static void ReadOptions()
-        {
+        private static void ReadOptions() {
             Console.Write("Enter the path to save files:");
-            BasePath = Console.ReadLine();
+            _basePath = Console.ReadLine()?.Replace('\\', '/').Replace(":\\", "://");
 
-            if(string.IsNullOrWhiteSpace(BasePath))
-            {
-                throw new ArgumentNullException(BasePath, "Invalid path");
+            if (IsNullOrWhiteSpace(_basePath)) {
+                throw new ArgumentNullException(_basePath, "Invalid path");
             }
+            
+            Console.Write("(Optional) Enter the URL to download from:");
+            string newUrl = Console.ReadLine();
+            if (!IsNullOrWhiteSpace(newUrl)) _theTroveUrl = newUrl;
 
             Console.WriteLine("Choose a download mode:");
             Console.WriteLine("1. Download All (Default)");
@@ -54,40 +52,36 @@ namespace TheTroveDownloader
             Console.WriteLine("3. Download specific folder");
             int.TryParse(Console.ReadLine(), out int optionSelected);
 
-            switch(optionSelected)
-            {
+            switch (optionSelected) {
                 case 2:
                     Console.Write("(Optional) Inform the ignored directories (separated by comma):");
-                    var ignoredNames = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(ignoredNames))
+                    string ignoredNames = Console.ReadLine();
+                    if (!IsNullOrWhiteSpace(ignoredNames))
                         IgnoredNames.AddRange(ignoredNames.Split(',').Select(s => s.Trim()));
                     break;
                 case 3:
                     Console.Write("(Optional) Inform the only directories to download (separated by comma):");
-                    var onlyIncludedNames = Console.ReadLine();
+                    string onlyIncludedNames = Console.ReadLine();
 
-                    if (!string.IsNullOrWhiteSpace(onlyIncludedNames))
+                    if (!IsNullOrWhiteSpace(onlyIncludedNames))
                         OnlyIncludedNames.AddRange(onlyIncludedNames.Split(',').Select(s => s.Trim()));
-                    break;
-                default:
                     break;
             }
 
             Console.Write("(Optional) Inform the ignored file extensions (separated by comma):");
-            var ignoredTypes = Console.ReadLine();
-                       
-            if (!string.IsNullOrWhiteSpace(ignoredTypes))
+            string ignoredTypes = Console.ReadLine();
+
+            if (!IsNullOrWhiteSpace(ignoredTypes))
                 IgnoredTypes.AddRange(ignoredTypes.Split(',').Select(s => s.Trim()));
 
             Console.Write("(Optional) Max concurrent downloads (Default 5):");
-            var maxParallelStr = Console.ReadLine();
+            string maxParallelStr = Console.ReadLine();
 
             if (int.TryParse(maxParallelStr, out int maxParallel) && maxParallel > 0)
-                parallel = maxParallel;
+                _parallel = maxParallel;
         }
 
-        public static async Task LoadPage(string baseUrl, string basePath)
-        {
+        private static async Task LoadPage(string baseUrl, string basePath) {
             Console.WriteLine($"Loading Page {baseUrl}");
 
             using HttpClient client = new HttpClient();
@@ -101,92 +95,79 @@ namespace TheTroveDownloader
 
             if (items != null && items.Any())
                 await HandlePageItems(baseUrl, basePath, items);
-
         }
 
-        private static async Task HandlePageItems(string baseUrl, string basePath, HtmlNodeCollection items)
-        {
-            Dictionary<string, string> files = new Dictionary<string, string>();
-            foreach (var item in items)
-            {
+        private static async Task HandlePageItems(string baseUrl, string basePath, HtmlNodeCollection items) {
+            var files = new Dictionary<string, string>();
+            foreach (HtmlNode item in items) {
                 ListedItem listedItem = GetListedItem(item);
 
                 Console.WriteLine($"Checking Item {listedItem.Name}");
 
                 if (!IsValidItem(listedItem, baseUrl))
                     continue;
-                
-                if (listedItem.IsFile)
-                {
+
+                if (listedItem.IsFile) {
                     if (!IgnoredTypes.Any(a => listedItem.Name.Contains(a)))
-                        files.Add(baseUrl + listedItem.Link[1..item.FirstChild.Attributes[1].Value.Length], $"{basePath}\\{HandleFileName(listedItem.Name)}");
+                        files.Add(baseUrl + listedItem.Link[1..item.FirstChild.Attributes[1].Value.Length],
+                            $"{basePath}\\{HandleFileName(listedItem.Name)}");
                 }
-                else
-                {
+                else {
                     Task.WaitAll(LoadPage($"{baseUrl}/{listedItem.Link}", Path.Combine(basePath, listedItem.Name)));
                 }
             }
 
-            Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = parallel }, file => {
-                Task.WaitAll(DownloadFile(file.Key, file.Value));
-            });
+            Parallel.ForEach(files, new ParallelOptions {MaxDegreeOfParallelism = _parallel},
+                file => {
+                    (string key, string value) = file;
+                    Task.WaitAll(DownloadFile(key, value));
+                });
         }
 
-        private static ListedItem GetListedItem(HtmlNode item)
-        {
-            var listedItem =  new ListedItem
-            {
+        private static ListedItem GetListedItem(HtmlNode item) {
+            var listedItem = new ListedItem {
                 Name = item.InnerText.Trim(),
                 IsFile = item.ParentNode.Attributes[0].Value != "litem dir"
             };
-            var firstChild = item.FirstChild;
+            HtmlNode firstChild = item.FirstChild;
 
-            if (firstChild.Attributes.Count == 2 && !string.IsNullOrWhiteSpace(item.FirstChild.Attributes[1].Value))
+            if (firstChild.Attributes.Count == 2 && !IsNullOrWhiteSpace(item.FirstChild.Attributes[1].Value))
                 listedItem.Link = item.FirstChild.Attributes[1].Value;
 
             return listedItem;
         }
 
-        private static bool IsValidItem(ListedItem item, string baseUrl)
-        {
-            return !IgnoredNames.Any(x => x == item.Name) &&
-                !(OnlyIncludedNames.Any() &&
-                    !OnlyIncludedNames.Any(x => x.ToLower() == item.Name.ToLower())
-                    && !OnlyIncludedNames.Any(x => HttpUtility.UrlDecode(baseUrl).ToLower().Contains(x.ToLower()))) &&
-                !string.IsNullOrWhiteSpace(item.Link);
+        private static bool IsValidItem(ListedItem item, string baseUrl) {
+            return IgnoredNames.All(x => x != item.Name) &&
+                   !(OnlyIncludedNames.Any() && OnlyIncludedNames.All(x => !string.Equals(x, item.Name, StringComparison.CurrentCultureIgnoreCase))
+                                             && !OnlyIncludedNames.Any(x => HttpUtility.UrlDecode(baseUrl).ToLower().Contains(x.ToLower())))
+                                             && !IsNullOrWhiteSpace(item.Link);
         }
 
-        public static async Task DownloadFile(string url, string path)
-        {
-            bool downloading = true;
-            int exceptionCount = 0;
+        public static async Task DownloadFile(string url, string path) {
+            var downloading = true;
+            var exceptionCount = 0;
 
-            while(downloading)
-            {
-                try
-                {
+            while (downloading) {
+                try {
                     Console.WriteLine($"Downloading File {path}");
                     CheckIfDirectoryExists(Path.GetDirectoryName(path));
 
-                    if (FileExists(path))
-                    {
+                    if (FileExists(path)) {
                         Console.WriteLine($"File {path} already exists. Skipping download.");
                     }
-                    else
-                    {
+                    else {
                         using var wc = new HttpClient();
                         var response = await wc.GetAsync(url);
 
-                        using (var fs = new FileStream(path, FileMode.CreateNew))
-                        {
+                        using (var fs = new FileStream(path, FileMode.CreateNew)) {
                             Task.WaitAll(response.Content.CopyToAsync(fs));
                         }
                     }
-                        
+
                     downloading = false;
                 }
-                catch
-                {
+                catch {
                     if (exceptionCount > 10)
                         throw;
 
@@ -197,37 +178,29 @@ namespace TheTroveDownloader
             }
         }
 
-        private static bool FileExists(string path)
-        {
-            var file = new System.IO.FileInfo(path);
+        private static bool FileExists(string path) {
+            var file = new FileInfo(path);
 
-            if (file.Exists && file.Length > 0)
-                return true;
-
-            return false;
+            return file.Exists && file.Length > 0;
         }
 
-        public static void CheckIfDirectoryExists(string path)
-        {
-            if (Directory.Exists(path))
-            {
+        private static void CheckIfDirectoryExists(string path) {
+            if (Directory.Exists(path)) {
                 return;
             }
 
             Directory.CreateDirectory(path);
         }
 
-        public static string HandleFileName(string fileName)
-        {
-            var file = Encoding.Default.GetBytes(fileName);
+        private static string HandleFileName(string fileName) {
+            byte[] file = Encoding.Default.GetBytes(fileName);
             return Encoding.UTF8.GetString(file).Replace('?', ' ');
         }
     }
-    
-    public class ListedItem
-    {
+
+    public class ListedItem {
         public string Name { get; set; }
         public string Link { get; set; }
-        public bool IsFile { get; set; } 
+        public bool IsFile { get; set; }
     }
 }
