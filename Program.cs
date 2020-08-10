@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace TheTroveDownloader {
             ReadOptions();
 
             try {
-                Task.WaitAll(LoadPage(_theTroveUrl, _basePath));
+                LoadPage(_theTroveUrl, _basePath);
                 Console.WriteLine("Finished.");
             }
             catch (Exception ex) {
@@ -40,36 +41,7 @@ namespace TheTroveDownloader {
             Console.WriteLine("\n\r \n\rPress any key to close this window");
             Console.ReadKey();
         }
-
-        private static void SaveLogError(Exception ex)
-        {
-            string filePath = $"{Directory.GetCurrentDirectory()}\\Error-{DateTime.Now.Ticks}.txt";
-
-            using (StreamWriter writer = new StreamWriter(filePath, true))
-            {
-                writer.WriteLine("Date : " + DateTime.Now.ToString());
-                writer.WriteLine();
-
-                writer.WriteLine($"IgnoredNames: {Join(", ", IgnoredNames)}");
-                writer.WriteLine($"OnlyIncludedNames: {Join(", ", OnlyIncludedNames)}");
-                writer.WriteLine($"IgnoredTypes: {Join(", ", IgnoredTypes)}");
-                writer.WriteLine($"_basePath: {_basePath}");
-                writer.WriteLine($"_parallel: {_parallel}");
-                writer.WriteLine($"_theTroveUrl: {_theTroveUrl}");
-
-                writer.WriteLine($"-----------------------------------------------------------------------------------");
-
-                while (ex != null)
-                {
-                    writer.WriteLine(ex.GetType().FullName);
-                    writer.WriteLine("Message : " + ex.Message);
-                    writer.WriteLine("StackTrace : " + ex.StackTrace);
-
-                    ex = ex.InnerException;
-                }
-            }
-        }
-
+    
         private static void ReadOptions() {
             Console.Write("Enter the path to save files:");
             _basePath = Console.ReadLine()?.Replace('\\', '/').Replace(":\\", "://");
@@ -117,7 +89,8 @@ namespace TheTroveDownloader {
                 _parallel = maxParallel;
         }
 
-        private static async Task LoadPage(string baseUrl, string basePath) {
+        #region Navigation
+        private static void LoadPage(string baseUrl, string basePath) {
             Console.WriteLine($"Loading Page {baseUrl}");
 
             using HttpClient client = new HttpClient();
@@ -130,10 +103,10 @@ namespace TheTroveDownloader {
             var items = pageDocument.DocumentNode.SelectNodes("(//td[contains(@class,'litem_name')])");
 
             if (items != null && items.Any())
-                await HandlePageItems(baseUrl, basePath, items);
+                HandlePageItems(baseUrl, basePath, items);
         }
 
-        private static async Task HandlePageItems(string baseUrl, string basePath, HtmlNodeCollection items) {
+        private static void HandlePageItems(string baseUrl, string basePath, HtmlNodeCollection items) {
             var files = new Dictionary<string, string>();
             foreach (HtmlNode item in items) {
                 ListedItem listedItem = GetListedItem(item);
@@ -149,7 +122,7 @@ namespace TheTroveDownloader {
                             $"{basePath}\\{HandleFileName(listedItem.Name)}");
                 }
                 else {
-                    Task.WaitAll(LoadPage($"{baseUrl}/{listedItem.Link}", Path.Combine(basePath, listedItem.Name)));
+                    LoadPage($"{baseUrl}/{listedItem.Link}", Path.Combine(basePath, listedItem.Name));
                 }
             }
 
@@ -158,6 +131,11 @@ namespace TheTroveDownloader {
                     (string key, string value) = file;
                     Task.WaitAll(DownloadFile(key, value));
                 });
+        }
+
+        private static string HandleFileName(string fileName) {
+            byte[] file = Encoding.Default.GetBytes(fileName);
+            return Encoding.UTF8.GetString(file).Replace('?', ' ');
         }
 
         private static ListedItem GetListedItem(HtmlNode item) {
@@ -179,7 +157,9 @@ namespace TheTroveDownloader {
                                              && !OnlyIncludedNames.Any(x => HttpUtility.UrlDecode(baseUrl).ToLower().Contains(x.ToLower())))
                                              && !IsNullOrWhiteSpace(item.Link);
         }
+        #endregion
 
+        #region Download File
         public static async Task DownloadFile(string url, string path) {
             var downloading = true;
             var exceptionCount = 0;
@@ -196,7 +176,8 @@ namespace TheTroveDownloader {
                         using var wc = new HttpClient();
                         var response = await wc.GetAsync(url);
 
-                        using (var fs = new FileStream(path, FileMode.CreateNew)) {
+                        using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                        {
                             Task.WaitAll(response.Content.CopyToAsync(fs));
                         }
                     }
@@ -227,10 +208,39 @@ namespace TheTroveDownloader {
 
             Directory.CreateDirectory(path);
         }
+        #endregion
 
-        private static string HandleFileName(string fileName) {
-            byte[] file = Encoding.Default.GetBytes(fileName);
-            return Encoding.UTF8.GetString(file).Replace('?', ' ');
+        private static void SaveLogError(Exception ex)
+        {
+            string filePath = $"{Directory.GetCurrentDirectory()}\\Error-{DateTime.Now.Ticks}.txt";
+
+            using (StreamWriter writer = new StreamWriter(filePath, true))
+            {
+                writer.WriteLine("Date : " + DateTime.Now.ToString());
+                writer.WriteLine($"OS Description: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}");
+                writer.WriteLine($"OS Architecture: {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}");
+                writer.WriteLine($"TheTroveDownloader Version: {Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion}");
+                writer.WriteLine();
+
+                writer.WriteLine($"IgnoredNames: {Join(", ", IgnoredNames)}");
+                writer.WriteLine($"OnlyIncludedNames: {Join(", ", OnlyIncludedNames)}");
+                writer.WriteLine($"IgnoredTypes: {Join(", ", IgnoredTypes)}");
+                writer.WriteLine($"_basePath: {_basePath}");
+                writer.WriteLine($"_parallel: {_parallel}");
+                writer.WriteLine($"_theTroveUrl: {_theTroveUrl}");
+
+
+                writer.WriteLine($"-----------------------------------------------------------------------------------");
+
+                while (ex != null)
+                {
+                    writer.WriteLine(ex.GetType().FullName);
+                    writer.WriteLine("Message : " + ex.Message);
+                    writer.WriteLine("StackTrace : " + ex.StackTrace);
+
+                    ex = ex.InnerException;
+                }
+            }
         }
     }
 
