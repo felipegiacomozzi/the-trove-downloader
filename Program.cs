@@ -31,6 +31,42 @@ namespace TheTroveDownloader {
             }
             catch (Exception ex) {
                 Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine("\n\r \n\r-----------------------------------------------------------------------------------");
+                Console.WriteLine("For help in solving this problem, please send the error file generated in this folder");
+                Console.WriteLine(@"to the Issues page on GitHub (https://github.com/felipegiacomozzi/the-trove-downloader/issues)");
+                SaveLogError(ex);
+            }
+            
+            Console.WriteLine("\n\r \n\rPress any key to close this window");
+            Console.ReadKey();
+        }
+
+        private static void SaveLogError(Exception ex)
+        {
+            string filePath = $"{Directory.GetCurrentDirectory()}\\Error-{DateTime.Now.Ticks}.txt";
+
+            using (StreamWriter writer = new StreamWriter(filePath, true))
+            {
+                writer.WriteLine("Date : " + DateTime.Now.ToString());
+                writer.WriteLine();
+
+                writer.WriteLine($"IgnoredNames: {Join(", ", IgnoredNames)}");
+                writer.WriteLine($"OnlyIncludedNames: {Join(", ", OnlyIncludedNames)}");
+                writer.WriteLine($"IgnoredTypes: {Join(", ", IgnoredTypes)}");
+                writer.WriteLine($"_basePath: {_basePath}");
+                writer.WriteLine($"_parallel: {_parallel}");
+                writer.WriteLine($"_theTroveUrl: {_theTroveUrl}");
+
+                writer.WriteLine($"-----------------------------------------------------------------------------------");
+
+                while (ex != null)
+                {
+                    writer.WriteLine(ex.GetType().FullName);
+                    writer.WriteLine("Message : " + ex.Message);
+                    writer.WriteLine("StackTrace : " + ex.StackTrace);
+
+                    ex = ex.InnerException;
+                }
             }
         }
 
