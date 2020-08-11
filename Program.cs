@@ -19,6 +19,7 @@ namespace TheTroveDownloader {
         private static string _basePath = Empty;
         private static int _parallel = 5;
         private static string _theTroveUrl = "https://thetrove.net/Books";
+        private static string _lastDownloadError = Empty;
 
         private static void Main() {
             IgnoredNames.Add("Parent Directory");
@@ -168,7 +169,7 @@ namespace TheTroveDownloader {
                 try {
                     Console.WriteLine($"Downloading File {path}");
                     CheckIfDirectoryExists(Path.GetDirectoryName(path));
-
+                    
                     if (FileExists(path)) {
                         Console.WriteLine($"File {path} already exists. Skipping download.");
                     }
@@ -184,13 +185,14 @@ namespace TheTroveDownloader {
 
                     downloading = false;
                 }
-                catch {
+                catch (Exception ex) {
                     if (exceptionCount > 10)
                         throw;
 
                     exceptionCount++;
                     Thread.Sleep(5000);
                     Console.WriteLine($"Error Downloading Fila {path}. Trying again.");
+                    _lastDownloadError = $"Error downloading file {path}. Trycount: {exceptionCount}.\n\rException:{GetExceptionLog(ex)}";
                 }
             }
         }
@@ -210,6 +212,7 @@ namespace TheTroveDownloader {
         }
         #endregion
 
+        #region Error Logging
         private static void SaveLogError(Exception ex)
         {
             string filePath = $"{Directory.GetCurrentDirectory()}\\Error-{DateTime.Now.Ticks}.txt";
@@ -229,19 +232,32 @@ namespace TheTroveDownloader {
                 writer.WriteLine($"_parallel: {_parallel}");
                 writer.WriteLine($"_theTroveUrl: {_theTroveUrl}");
 
+                writer.WriteLine($"---------------------------------- LAST DOWNLOAD ERROR --------------------------------------");
 
-                writer.WriteLine($"-----------------------------------------------------------------------------------");
+                writer.WriteLine(_lastDownloadError);
 
-                while (ex != null)
-                {
-                    writer.WriteLine(ex.GetType().FullName);
-                    writer.WriteLine("Message : " + ex.Message);
-                    writer.WriteLine("StackTrace : " + ex.StackTrace);
+                writer.WriteLine($"---------------------------------- MAIN EXCEPTION -------------------------------------------");
 
-                    ex = ex.InnerException;
-                }
+                writer.WriteLine(GetExceptionLog(ex));
             }
         }
+
+        private static string GetExceptionLog(Exception ex)
+        {
+            StringBuilder sb = new StringBuilder();
+            
+            while (ex != null)
+            {
+                sb.AppendLine(ex.GetType().FullName);
+                sb.AppendLine("Message : " + ex.Message);
+                sb.AppendLine("StackTrace : " + ex.StackTrace);
+
+                ex = ex.InnerException;
+            }
+            
+            return sb.ToString();
+        }
+        #endregion
     }
 
     public class ListedItem {
