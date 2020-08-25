@@ -142,7 +142,8 @@ namespace TheTroveDownloader {
         private static ListedItem GetListedItem(HtmlNode item) {
             var listedItem = new ListedItem {
                 Name = item.InnerText.Trim(),
-                IsFile = item.ParentNode.Attributes[0].Value != "litem dir"
+                IsFile = item.ParentNode.Attributes[0].Value != "litem dir",
+                FileSize = item.ParentNode.ChildNodes[7].InnerHtml?.ToString()
             };
             HtmlNode firstChild = item.FirstChild;
 
@@ -175,7 +176,7 @@ namespace TheTroveDownloader {
                     }
                     else {
                         using var wc = new HttpClient();
-                        var response = await wc.GetAsync(url);
+                        var response = await wc.GetAsync(url, GetHttpCompletionOption());
 
                         using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                         {
@@ -209,6 +210,11 @@ namespace TheTroveDownloader {
             }
 
             Directory.CreateDirectory(path);
+        }
+
+        private static HttpCompletionOption GetHttpCompletionOption()
+        {
+            return HttpCompletionOption.ResponseHeadersRead;
         }
         #endregion
 
@@ -263,6 +269,8 @@ namespace TheTroveDownloader {
     public class ListedItem {
         public string Name { get; set; }
         public string Link { get; set; }
+        public string AbsoluteLink { get; set; }
         public bool IsFile { get; set; }
+        public string FileSize { get; set; }
     }
 }
