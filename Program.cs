@@ -5,9 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using System.Web;
 using static System.String;
 
@@ -18,11 +20,11 @@ namespace TheTroveDownloader {
         private static readonly List<string> IgnoredTypes = new List<string>();
         private static string _basePath = Empty;
         private static int _parallel = 5;
-        private static string _theTroveUrl = "https://thetrove.net/Books";
+        private static string _theTroveUrl = "https://thetrove.is/Books/";
         private static string _lastDownloadError = Empty;
 
         private static void Main() {
-            IgnoredNames.Add("Parent Directory");
+            IgnoredNames.Add("Parent directory/");
             IgnoredNames.Add("?one");
             IgnoredTypes.Add(".DS_Store");
             ReadOptions();
@@ -101,13 +103,13 @@ namespace TheTroveDownloader {
             HtmlDocument pageDocument = new HtmlDocument();
             pageDocument.LoadHtml(pageContents);
 
-            var items = pageDocument.DocumentNode.SelectNodes("(//td[contains(@class,'litem_name')])");
+            var items = pageDocument.DocumentNode.SelectSingleNode("//*[@id='list']").LastChild.ChildNodes.Where(x => x.InnerLength > 1).ToList();
 
             if (items != null && items.Any())
                 HandlePageItems(baseUrl, basePath, items);
         }
 
-        private static void HandlePageItems(string baseUrl, string basePath, HtmlNodeCollection items) {
+        private static void HandlePageItems(string baseUrl, string basePath, List<HtmlNode> items) {
             var files = new Dictionary<string, string>();
             foreach (HtmlNode item in items) {
                 ListedItem listedItem = GetListedItem(item);
@@ -119,7 +121,7 @@ namespace TheTroveDownloader {
 
                 if (listedItem.IsFile) {
                     if (!IgnoredTypes.Any(a => listedItem.Name.Contains(a)))
-                        files.Add(baseUrl + listedItem.Link[1..item.FirstChild.Attributes[1].Value.Length],
+                        files.Add(baseUrl + listedItem.Link,
                             $"{basePath}\\{HandleFileName(listedItem.Name)}");
                 }
                 else {
@@ -140,15 +142,22 @@ namespace TheTroveDownloader {
         }
 
         private static ListedItem GetListedItem(HtmlNode item) {
-            var listedItem = new ListedItem {
-                Name = item.InnerText.Trim(),
-                IsFile = item.ParentNode.Attributes[0].Value != "litem dir",
-                FileSize = item.ParentNode.ChildNodes[7].InnerHtml?.ToString()
-            };
-            HtmlNode firstChild = item.FirstChild;
+            var linkElement = item.ChildNodes.FirstOrDefault(x => x.GetClasses().Contains("link"))?.FirstChild;
+            var size = item.ChildNodes.FirstOrDefault(x => x.GetClasses().Contains("size"))?.InnerText;
+            var date = item.ChildNodes.FirstOrDefault(x => x.GetClasses().Contains("date"))?.InnerText;
 
-            if (firstChild.Attributes.Count == 2 && !IsNullOrWhiteSpace(item.FirstChild.Attributes[1].Value))
-                listedItem.Link = item.FirstChild.Attributes[1].Value;
+            if(linkElement == null || size == null || IsNullOrWhiteSpace(size))
+            {
+                throw new InvalidLinkItemException($"Error reading item: {item.InnerHtml}");
+            }
+
+            var listedItem = new ListedItem {
+                Name = linkElement.InnerText,
+                IsFile = size != "-",
+                FileSize = size,                
+                PublishedDate = DateTime.TryParse(date, out var parsedDate) ? parsedDate : (DateTime?)null,
+                Link = linkElement.Attributes[0].Value
+            };
 
             return listedItem;
         }
@@ -272,5 +281,18 @@ namespace TheTroveDownloader {
         public string AbsoluteLink { get; set; }
         public bool IsFile { get; set; }
         public string FileSize { get; set; }
+        public DateTime? PublishedDate { get; set; }
+
     }
+
+    [Serializable()]
+    public class InvalidLinkItemException : Exception
+    {
+        public InvalidLinkItemException() : base() { }
+        public InvalidLinkItemException(string message) : base(message) { }
+        public InvalidLinkItemException(string message, System.Exception inner) : base(message, inner) { }
+
+        protected InvalidLinkItemException(System.Runtime.Serialization.SerializationInfo info,
+            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    };
 }
