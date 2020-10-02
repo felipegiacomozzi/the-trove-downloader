@@ -1,16 +1,30 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>TheTroveDownloader</AssemblyName>
     <RootNamespace>TheTroveDownloader</RootNamespace>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
     <PackageProjectUrl>https://github.com/felipegiacomozzi/the-trove-downloader</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.24" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.8" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="3.1.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
   </ItemGroup>
 
 </Project>
