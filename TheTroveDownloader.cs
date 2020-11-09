@@ -133,7 +133,7 @@ namespace TheTroveDownloader
             HtmlDocument pageDocument = new HtmlDocument();
             pageDocument.LoadHtml(pageContents);
 
-            var items = pageDocument.DocumentNode.SelectSingleNode("//*[@id='list']").LastChild.ChildNodes.Where(x => x.InnerLength > 1).ToList();
+            var items = pageDocument.DocumentNode.SelectSingleNode("//*[@id='list']").LastChild.ChildNodes.Where(x => x.InnerLength > 1 && x.Name != "#text").ToList();
 
             if (items != null && items.Any())
                 HandlePageItems(baseUrl, basePath, items);
@@ -233,12 +233,12 @@ namespace TheTroveDownloader
                     }
                     else
                     {
-                        using var wc = new HttpClient();
-                        var response = await wc.GetAsync(url, GetHttpCompletionOption());
-                        using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                        {
-                            Task.WaitAll(response.Content.CopyToAsync(fs));
-                        }
+                        //using var wc = new HttpClient();
+                        //var response = await wc.GetAsync(url, GetHttpCompletionOption());
+                        //using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                        //{
+                        //    Task.WaitAll(response.Content.CopyToAsync(fs));
+                        //}
                     }
 
                     downloading = false;
