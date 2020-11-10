@@ -233,12 +233,12 @@ namespace TheTroveDownloader
                     }
                     else
                     {
-                        //using var wc = new HttpClient();
-                        //var response = await wc.GetAsync(url, GetHttpCompletionOption());
-                        //using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                        //{
-                        //    Task.WaitAll(response.Content.CopyToAsync(fs));
-                        //}
+                        using var wc = new HttpClient();
+                        var response = await wc.GetAsync(url, GetHttpCompletionOption());
+                        using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                        {
+                            Task.WaitAll(response.Content.CopyToAsync(fs));
+                        }
                     }
 
                     downloading = false;
