@@ -158,7 +158,7 @@ namespace TheTroveDownloader
                 {
                     if (!IgnoredTypes.Any(a => listedItem.Name.Contains(a)))
                         files.Add(baseUrl + listedItem.Link,
-                            $"{basePath}\\{HandleFileName(listedItem.Name)}");
+                            $"{HandleFileName(basePath)}\\{HandleFileName(listedItem.Name)}");
                 }
                 else
                 {
