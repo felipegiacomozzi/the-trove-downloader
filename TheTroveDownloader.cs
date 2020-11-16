@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using HtmlAgilityPack;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace TheTroveDownloader
 {
@@ -158,7 +159,7 @@ namespace TheTroveDownloader
                 {
                     if (!IgnoredTypes.Any(a => listedItem.Name.Contains(a)))
                         files.Add(baseUrl + listedItem.Link,
-                            $"{HandleFileName(basePath)}\\{HandleFileName(listedItem.Name)}");
+                            $"{HandlePathName(basePath)}\\{HandleFileName(listedItem.Name)}");
                 }
                 else
                 {
@@ -176,7 +177,24 @@ namespace TheTroveDownloader
         private static string HandleFileName(string fileName)
         {
             byte[] file = Encoding.Default.GetBytes(fileName);
-            return Encoding.UTF8.GetString(file).Replace('?', ' ');
+            return Encoding.UTF8.GetString(file).Replace('?', ' ').Trim();
+        }
+
+        private static string HandlePathName(string pathName)
+        {
+            byte[] file = Encoding.Default.GetBytes(pathName);
+            var fullPath = Path.GetFullPath(Encoding.UTF8.GetString(file).Replace('?', ' '));
+            var pathRes = "";
+
+            if (System.Runtime.InteropServices.RuntimeInformation
+                                               .IsOSPlatform(OSPlatform.Windows))
+                foreach (var path in fullPath.Split('\\'))
+                    pathRes = Path.Combine(pathRes, path.Trim());
+            else
+                foreach (var path in fullPath.Split('/'))
+                    pathRes = Path.Combine(pathRes, path.Trim());
+
+            return pathRes;
         }
 
         private static ListedItem GetListedItem(HtmlNode item)
