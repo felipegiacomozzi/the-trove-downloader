@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>TheTroveDownloader</AssemblyName>
     <RootNamespace>TheTroveDownloader</RootNamespace>
-    <Version>1.0.12</Version>
+    <Version>1.0.13</Version>
     <PackageProjectUrl>https://github.com/felipegiacomozzi/the-trove-downloader</PackageProjectUrl>
   </PropertyGroup>
 

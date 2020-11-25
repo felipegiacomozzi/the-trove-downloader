@@ -13,6 +13,7 @@ using HtmlAgilityPack;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace TheTroveDownloader
 {
@@ -28,7 +29,7 @@ namespace TheTroveDownloader
         private static ILogger<TheTroveDownloader> _logger;
         private readonly IHostApplicationLifetime _appLifetime;
         private static bool isCancelled = false;
-
+        
         public TheTroveDownloader(ILogger<TheTroveDownloader> logger, IHostApplicationLifetime appLifetime)
         {
             _logger = logger;
@@ -159,7 +160,7 @@ namespace TheTroveDownloader
                 {
                     if (!IgnoredTypes.Any(a => listedItem.Name.Contains(a)))
                         files.Add(baseUrl + listedItem.Link,
-                            $"{HandlePathName(basePath)}\\{HandleFileName(listedItem.Name)}");
+                            $"{HandlePathName(basePath)}\\{RemoveInvalidCharacters(listedItem.Name)}");
                 }
                 else
                 {
@@ -174,16 +175,9 @@ namespace TheTroveDownloader
                 });
         }
 
-        private static string HandleFileName(string fileName)
-        {
-            byte[] file = Encoding.Default.GetBytes(fileName);
-            return Encoding.UTF8.GetString(file).Replace('?', ' ').Trim();
-        }
-
         private static string HandlePathName(string pathName)
         {
-            byte[] file = Encoding.Default.GetBytes(pathName);
-            var fullPath = Path.GetFullPath(Encoding.UTF8.GetString(file).Replace('?', ' '));
+            var fullPath = Path.GetFullPath(RemoveInvalidCharacters(pathName, true));
             var pathRes = "";
 
             if (System.Runtime.InteropServices.RuntimeInformation
@@ -195,6 +189,24 @@ namespace TheTroveDownloader
                     pathRes = Path.Combine(pathRes, path.Trim());
 
             return pathRes;
+        }
+
+        private static string RemoveInvalidCharacters(string text, bool isPath = false)
+        {
+            byte[] file = Encoding.Default.GetBytes(text);
+            var path = Regex.Replace(Encoding.UTF8.GetString(file), pattern: "\\?|;|\\*|<|>", "");
+
+            int start = isPath ? path.IndexOf(':', 0) : 0;
+
+            while(start >= 0)
+            {
+                start = path.IndexOf(':', start + 1);
+                if (start >= 0)
+                    path = path.Remove(start, 1);
+
+            }
+
+            return path;
         }
 
         private static ListedItem GetListedItem(HtmlNode item)
