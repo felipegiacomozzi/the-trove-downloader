@@ -135,10 +135,17 @@ namespace TheTroveDownloader
             HtmlDocument pageDocument = new HtmlDocument();
             pageDocument.LoadHtml(pageContents);
 
-            var items = pageDocument.DocumentNode.SelectSingleNode("//*[@id='list']").LastChild.ChildNodes.Where(x => x.InnerLength > 1 && x.Name != "#text").ToList();
+            var items = pageDocument.DocumentNode.SelectSingleNode("//*[@id='list']")?.LastChild.ChildNodes?.Where(x => x.InnerLength > 1 && x.Name != "#text")?.ToList();
 
             if (items != null && items.Any())
                 HandlePageItems(baseUrl, basePath, items);
+            else if(pageDocument.DocumentNode.InnerHtml.ToUpper().Contains("HTTP-EQUIV"))
+            {
+                var redirectNodeValue = pageDocument.DocumentNode.SelectSingleNode("//meta").Attributes[1].Value;
+                var redirectedPath = redirectNodeValue.Substring(redirectNodeValue.IndexOf("=")+1);
+
+                LoadPage(redirectedPath, basePath);
+            }
         }
 
         private static void HandlePageItems(string baseUrl, string basePath, List<HtmlNode> items)
