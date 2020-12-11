@@ -138,13 +138,21 @@ namespace TheTroveDownloader
             var items = pageDocument.DocumentNode.SelectSingleNode("//*[@id='list']")?.LastChild.ChildNodes?.Where(x => x.InnerLength > 1 && x.Name != "#text")?.ToList();
 
             if (items != null && items.Any())
+            { 
                 HandlePageItems(baseUrl, basePath, items);
+            }
             else if(pageDocument.DocumentNode.InnerHtml.ToUpper().Contains("HTTP-EQUIV"))
             {
+                _logger.LogInformation($"Found a redirect url {baseUrl}");
                 var redirectNodeValue = pageDocument.DocumentNode.SelectSingleNode("//meta").Attributes[1].Value;
                 var redirectedPath = redirectNodeValue.Substring(redirectNodeValue.IndexOf("=")+1);
 
+                _logger.LogInformation($"Redirecting to {redirectedPath}");
                 LoadPage(redirectedPath, basePath);
+            }
+            else
+            {
+                _logger.LogInformation($"Could not load page {baseUrl}. Moving on.");
             }
         }
 
