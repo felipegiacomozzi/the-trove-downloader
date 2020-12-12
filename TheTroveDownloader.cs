@@ -144,11 +144,7 @@ namespace TheTroveDownloader
             else if(pageDocument.DocumentNode.InnerHtml.ToUpper().Contains("HTTP-EQUIV"))
             {
                 _logger.LogInformation($"Found a redirect url {baseUrl}");
-                var redirectNodeValue = pageDocument.DocumentNode.SelectSingleNode("//meta").Attributes[1].Value;
-                var redirectedPath = redirectNodeValue.Substring(redirectNodeValue.IndexOf("=")+1);
-
-                _logger.LogInformation($"Redirecting to {redirectedPath}");
-                LoadPage(redirectedPath, basePath);
+                _logger.LogInformation($"Moving on");
             }
             else
             {
@@ -249,7 +245,7 @@ namespace TheTroveDownloader
 
         private static bool IsValidItem(ListedItem item, string baseUrl)
         {
-            return IgnoredNames.All(x => x != item.Name) &&
+            return IgnoredNames.All(x => x != item.Name) &&                   
                    !(OnlyIncludedNames.Any() && OnlyIncludedNames.All(x => !string.Equals(x, item.Name, StringComparison.CurrentCultureIgnoreCase))
                                              && !OnlyIncludedNames.Any(x => HttpUtility.UrlDecode(baseUrl).ToLower().Contains(x.ToLower())))
                                              && !IsNullOrWhiteSpace(item.Link);

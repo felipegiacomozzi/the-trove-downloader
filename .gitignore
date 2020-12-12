@@ -7,3 +7,8 @@
 /obj
 .idea/
 /releases
+/.vs/TheTroveDownloader/config/applicationhost.config
+/.vs/TheTroveDownloader/DesignTimeBuild/.dtbcache.v2
+/.vs/TheTroveDownloader/v16/TestStore/0/000.testlog
+/.vs/TheTroveDownloader/v16/TestStore/0/testlog.manifest
+/.vs/TheTroveDownloader/v16/.suo
