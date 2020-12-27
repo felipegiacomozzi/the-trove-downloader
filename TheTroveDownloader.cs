@@ -245,7 +245,7 @@ namespace TheTroveDownloader
 
         private static bool IsValidItem(ListedItem item, string baseUrl)
         {
-            return IgnoredNames.All(x => x != item.Name) &&                   
+            return IgnoredNames.All(x => x != item.Name?.Trim()) &&                   
                    !(OnlyIncludedNames.Any() && OnlyIncludedNames.All(x => !string.Equals(x, item.Name, StringComparison.CurrentCultureIgnoreCase))
                                              && !OnlyIncludedNames.Any(x => HttpUtility.UrlDecode(baseUrl).ToLower().Contains(x.ToLower())))
                                              && !IsNullOrWhiteSpace(item.Link);
