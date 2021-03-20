@@ -1,19 +1,19 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using HtmlAgilityPack;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Web;
-using static System.String;
-using Microsoft.Extensions.Logging;
-using HtmlAgilityPack;
-using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
+using static System.String;
 
 namespace TheTroveDownloader
 {
@@ -171,7 +171,7 @@ namespace TheTroveDownloader
                 {
                     if (!IgnoredTypes.Any(a => listedItem.Name.Contains(a)))
                         files.Add(baseUrl + listedItem.Link,
-                            $"{HandlePathName(basePath)}\\{RemoveInvalidCharacters(listedItem.Name)}");
+                            $"{HandlePathName(basePath)}\\{RemoveInvalidCharacters(listedItem.Name).Trim()}");
                 }
                 else
                 {
@@ -190,7 +190,7 @@ namespace TheTroveDownloader
         {
             var fullPath = Path.GetFullPath(RemoveInvalidCharacters(pathName, true));
             var pathRes = "";
-
+            
             if (System.Runtime.InteropServices.RuntimeInformation
                                                .IsOSPlatform(OSPlatform.Windows))
                 foreach (var path in fullPath.Split('\\'))
@@ -214,7 +214,6 @@ namespace TheTroveDownloader
                 start = path.IndexOf(':', start + 1);
                 if (start >= 0)
                     path = path.Remove(start, 1);
-
             }
 
             return path;
