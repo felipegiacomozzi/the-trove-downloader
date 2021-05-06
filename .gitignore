@@ -1,14 +1,37 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
+﻿*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+nupkg/
 
-/.vs/TheDroveDownloader
-/bin
-/obj
-.idea/
-/releases
-/.vs/TheTroveDownloader/config/applicationhost.config
-/.vs/TheTroveDownloader/DesignTimeBuild/.dtbcache.v2
-/.vs/TheTroveDownloader/v16/TestStore/0/000.testlog
-/.vs/TheTroveDownloader/v16/TestStore/0/testlog.manifest
-/.vs/TheTroveDownloader/v16/.suo
+# Visual Studio Code
+.vscode
+
+# Rider
+.idea
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# Visual Studio 2015
+.vs/

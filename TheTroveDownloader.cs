@@ -73,7 +73,7 @@ namespace TheTroveDownloader
         private static void ReadOptions()
         {
             Console.WriteLine("Enter the path to save files:");
-            _basePath = Console.ReadLine()?.Replace('\\', '/').Replace(":\\", "://");
+            _basePath = Console.ReadLine()?.Replace('\\', '/');
 
             if (IsNullOrWhiteSpace(_basePath))
             {
@@ -82,7 +82,12 @@ namespace TheTroveDownloader
 
             Console.WriteLine("(Optional) Enter the URL to download from:");
             string newUrl = Console.ReadLine();
-            if (!IsNullOrWhiteSpace(newUrl)) _theTroveUrl = newUrl;
+            if (!IsNullOrWhiteSpace(newUrl)) 
+            {
+                if (!newUrl.EndsWith('/')) newUrl = newUrl + "/";
+
+                _theTroveUrl = newUrl;
+            } 
 
             Console.WriteLine("Choose a download mode:");
             Console.WriteLine("1. Download All (Default)");
@@ -171,11 +176,11 @@ namespace TheTroveDownloader
                 {
                     if (!IgnoredTypes.Any(a => listedItem.Name.Contains(a)))
                         files.Add(baseUrl + listedItem.Link,
-                            $"{HandlePathName(basePath)}\\{RemoveInvalidCharacters(listedItem.Name).Trim()}");
+                            $"{HandlePathName(basePath)}{RemoveInvalidCharacters(listedItem.Name).Trim()}");
                 }
                 else
                 {
-                    LoadPage($"{baseUrl}/{listedItem.Link}", Path.Combine(basePath, listedItem.Name));
+                    LoadPage($"{baseUrl}{listedItem.Link}", Path.Combine(basePath, listedItem.Name));
                 }
             }
 
@@ -191,13 +196,24 @@ namespace TheTroveDownloader
             var fullPath = Path.GetFullPath(RemoveInvalidCharacters(pathName, true));
             var pathRes = "";
             
-            if (System.Runtime.InteropServices.RuntimeInformation
-                                               .IsOSPlatform(OSPlatform.Windows))
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
                 foreach (var path in fullPath.Split('\\'))
                     pathRes = Path.Combine(pathRes, path.Trim());
+                
+                pathRes = pathRes + "\\";
+            }
             else
+            {
+                // Keep the leading slash in path
+                if (fullPath.StartsWith('/'))
+                    pathRes = "/";
+
                 foreach (var path in fullPath.Split('/'))
                     pathRes = Path.Combine(pathRes, path.Trim());
+
+                pathRes = pathRes + "/";
+            }
 
             return pathRes;
         }
@@ -293,7 +309,7 @@ namespace TheTroveDownloader
 
                     exceptionCount++;
                     Thread.Sleep(5000);
-                    _logger.LogInformation($"Error Downloading Fila {path}. Trying again.");
+                    _logger.LogInformation($"Error Downloading File {path}. Trying again.");
                     _lastDownloadError = $"Error downloading file {path}. Trycount: {exceptionCount}.\n\rException:{GetExceptionLog(ex)}";
                 }
             }
@@ -387,4 +403,3 @@ namespace TheTroveDownloader
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     };
 }
-
