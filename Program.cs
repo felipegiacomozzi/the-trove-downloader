@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace TheTroveDownloader
 {
-    static class  Program
+    static class Program
     {
         private static async Task Main()
         {
@@ -46,9 +46,7 @@ namespace TheTroveDownloader
                 .UseConsoleLifetime()
                 .Build();
 
-            await host.RunAsync();
-            
+            await host.RunAsync();            
         }
     }
 }
-

@@ -73,7 +73,7 @@ namespace TheTroveDownloader
         private static void ReadOptions()
         {
             Console.WriteLine("Enter the path to save files:");
-            _basePath = Console.ReadLine()?.Replace('\\', '/').Replace(":\\", "://");
+            _basePath = Console.ReadLine()?.Replace('\\', '/');
 
             if (IsNullOrWhiteSpace(_basePath))
             {
@@ -82,7 +82,12 @@ namespace TheTroveDownloader
 
             Console.WriteLine("(Optional) Enter the URL to download from:");
             string newUrl = Console.ReadLine();
-            if (!IsNullOrWhiteSpace(newUrl)) _theTroveUrl = newUrl;
+            if (!IsNullOrWhiteSpace(newUrl)) 
+            {
+                if (!newUrl.EndsWith('/')) newUrl = newUrl + "/";
+
+                _theTroveUrl = newUrl;
+            } 
 
             Console.WriteLine("Choose a download mode:");
             Console.WriteLine("1. Download All (Default)");
@@ -171,11 +176,11 @@ namespace TheTroveDownloader
                 {
                     if (!IgnoredTypes.Any(a => listedItem.Name.Contains(a)))
                         files.Add(baseUrl + listedItem.Link,
-                            $"{HandlePathName(basePath)}\\{RemoveInvalidCharacters(listedItem.Name).Trim()}");
+                            $"{HandlePathName(basePath)}{RemoveInvalidCharacters(listedItem.Name).Trim()}");
                 }
                 else
                 {
-                    LoadPage($"{baseUrl}/{listedItem.Link}", Path.Combine(basePath, listedItem.Name));
+                    LoadPage($"{baseUrl}{listedItem.Link}", Path.Combine(basePath, listedItem.Name));
                 }
             }
 
@@ -195,6 +200,8 @@ namespace TheTroveDownloader
             {
                 foreach (var path in fullPath.Split('\\'))
                     pathRes = Path.Combine(pathRes, path.Trim());
+                
+                pathRes = pathRes + "\\";
             }
             else
             {
@@ -204,6 +211,8 @@ namespace TheTroveDownloader
 
                 foreach (var path in fullPath.Split('/'))
                     pathRes = Path.Combine(pathRes, path.Trim());
+
+                pathRes = pathRes + "/";
             }
 
             return pathRes;
@@ -394,4 +403,3 @@ namespace TheTroveDownloader
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     };
 }
-
