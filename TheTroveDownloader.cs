@@ -191,13 +191,20 @@ namespace TheTroveDownloader
             var fullPath = Path.GetFullPath(RemoveInvalidCharacters(pathName, true));
             var pathRes = "";
             
-            if (System.Runtime.InteropServices.RuntimeInformation
-                                               .IsOSPlatform(OSPlatform.Windows))
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
                 foreach (var path in fullPath.Split('\\'))
                     pathRes = Path.Combine(pathRes, path.Trim());
+            }
             else
+            {
+                // Keep the leading slash in path
+                if (fullPath.StartsWith('/'))
+                    pathRes = "/";
+
                 foreach (var path in fullPath.Split('/'))
                     pathRes = Path.Combine(pathRes, path.Trim());
+            }
 
             return pathRes;
         }
@@ -293,7 +300,7 @@ namespace TheTroveDownloader
 
                     exceptionCount++;
                     Thread.Sleep(5000);
-                    _logger.LogInformation($"Error Downloading Fila {path}. Trying again.");
+                    _logger.LogInformation($"Error Downloading File {path}. Trying again.");
                     _lastDownloadError = $"Error downloading file {path}. Trycount: {exceptionCount}.\n\rException:{GetExceptionLog(ex)}";
                 }
             }
