@@ -2,6 +2,8 @@
 # the-trove-downloader
 Automatic downloads files from The Trove Rpg Books ([https://thetrove.net/](https://thetrove.net/)) or any other URL specified.
 
+Unfortunately The Trove is down, so this project is on hold, maybe forever.
+
 ## How to use
 
  - Download the latest release [here](https://github.com/felipegiacomozzi/the-trove-downloader/releases)
